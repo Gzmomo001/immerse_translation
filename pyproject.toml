@@ -1,132 +1,93 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "ai-video-dubbing"
+name = "ai-dubbing-warehouse"
 version = "0.1.0"
 description = "AI Video Dubbing Warehouse - 将英文视频转换为中文配音"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "Your Name", email = "your.email@example.com"}
-]
-keywords = ["ai", "dubbing", "video", "translation", "tts"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-]
 requires-python = ">=3.10"
+authors = [
+    {name = "AI Dubbing Team"}
+]
 dependencies = [
+    # Core AI and DSP libraries - 使用平台特定版本
     "torch>=2.0.0",
     "torchaudio>=2.0.0",
     "librosa>=0.10.0",
     "soundfile>=0.12.0",
     "numpy>=1.24.0",
+
+    # Module 1: Source Separation
     "audio-separator>=0.12.0",
+
+    # Module 2: Transcription
     "whisperx @ git+https://github.com/m-bain/whisperx.git",
+
+    # Module 3: LLM Director
     "openai>=1.0.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
+
+    # Module 4: TTS Engine
     "modelscope>=1.9.0",
     "funasr>=1.0.0",
+
+    # Module 5: Post-Processing
     "ffmpeg-python>=0.2.0",
     "pydub>=0.25.0",
+
+    # Async & Utilities
     "aiohttp>=3.9.0",
     "python-dotenv>=1.0.0",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+# 平台特定的 PyTorch 源配置
+# macOS 使用默认 PyPI (CPU/MPS 版本)
+# Linux CUDA 用户需要手动安装: uv pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+[tool.uv.sources]
+torch = { index = "pytorch-cpu", marker = "sys_platform == 'darwin' or sys_platform == 'win32'" }
+torchaudio = { index = "pytorch-cpu", marker = "sys_platform == 'darwin' or sys_platform == 'win32'" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.0.0",
     "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
-    "mypy>=1.0.0",
-    "pre-commit>=3.0.0",
+    "ruff>=0.1.0",
 ]
 
-[project.scripts]
-ai-dubbing = "ai_dubbing.cli:main"
-
-[project.urls]
-Homepage = "https://github.com/yourusername/ai-video-dubbing"
-Documentation = "https://github.com/yourusername/ai-video-dubbing#readme"
-Repository = "https://github.com/yourusername/ai-video-dubbing.git"
-Issues = "https://github.com/yourusername/ai-video-dubbing/issues"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-dir]
-"" = "src"
-
+# 代码质量工具配置
 [tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
+line-length = 88
+target-version = ['py310']
 
-[tool.isort]
-profile = "black"
-line_length = 100
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = false
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "-v --tb=short"
-asyncio_mode = "auto"
-
-[tool.coverage.run]
-source = ["src"]
-omit = ["*/tests/*", "*/test_*"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-]
